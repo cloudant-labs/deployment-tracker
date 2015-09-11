@@ -16,7 +16,8 @@ var express = require('express'),
     sessionStore = new expressSession.MemoryStore(),
     _ = require("underscore"),
     uuid = require('node-uuid'),
-    forceSSL = require('express-force-ssl');
+    crypto = require('crypto'),
+    csv = require('express-csv');
 
 
 dotenv.load();
@@ -42,7 +43,9 @@ app.use(expressSession({ secret: uuid.v4(),
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(forceSSL);
+if (!appEnv.isLocal) {
+  app.use(require('express-force-ssl'));
+}
 
 passport.serializeUser(function(user, done) {
     done(null, user);
@@ -126,6 +129,9 @@ app.get('/stats', authenticate(), function(req, res) {
           url: url,
           count: 0
         };
+        if (url) {
+          apps[url].url_hash = crypto.createHash('md5').update(url).digest('hex');
+        }
       }
       if (validator.isURL(url, {protocols: ['http','https'], require_protocol: true})) {
         apps[url].is_url = true;
@@ -155,52 +161,87 @@ app.get('/stats', authenticate(), function(req, res) {
   });
 });
 
-app.post('/', urlEncodedParser, function(req, res) {
+// Get CSV of metrics overview
+app.get('/stats.csv', authenticate(), function(req, res) {
   var app = req.app;
   var deploymentTrackerDb = app.get('deployment-tracker-db');
   if (!deploymentTrackerDb) {
-    return res.status(500).json({ error: 'No database server configured' });
-  }
-  if (!req.body) {
-    return res.sendStatus(400);
-  }
-  var event = {
-    date_received: new Date().toJSON()
-  };
-  if (req.body.date_sent) {
-    event.date_sent = req.body.date_sent;
-  }
-  if (req.body.code_version) {
-    event.code_version = req.body.code_version;
-  }
-  if (req.body.repository_url) {
-    event.repository_url = req.body.repository_url;
-  }
-  if (req.body.application_name) {
-    event.application_name = req.body.application_name;
-  }
-  if (req.body.space_id) {
-    event.space_id = req.body.space_id;
-  }
-  if (req.body.application_version) {
-    event.application_version = req.body.application_version;
-  }
-  if (req.body.application_uris) {
-    event.application_uris = req.body.application_uris;
+    return res.status(500);
   }
   var eventsDb = deploymentTrackerDb.use('events');
-  eventsDb.insert(event, function(err, body) {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({error: 'Internal Server Error'});
-    }
-    return res.status(201).json({
-      ok: true
+  eventsDb.view('deployments', 'by_repo', {group_level: 3}, function(err, body) {
+    var apps = [
+      ['URL', 'Year', 'Month', 'Deployments']
+    ];
+    body.rows.map(function(row) {
+      var url = row.key[0];
+      var year = row.key[1];
+      var month = row.key[2];
+      var count = row.value;
+      apps.push([url, year, month, count]);
     });
+    res.csv(apps);
   });
 });
 
-app.post('/api/v1/track', jsonParser, function(req, res) {
+// Get metrics for a specific repo
+app.get('/stats/:hash', authenticate(), function(req, res) {
+  var app = req.app;
+  var deploymentTrackerDb = app.get('deployment-tracker-db');
+  if (!deploymentTrackerDb) {
+    return res.status(500);
+  }
+  var eventsDb = deploymentTrackerDb.use('events');
+  var hash = req.param('hash');
+  eventsDb.view('deployments', 'by_repo_hash', {startkey: [hash], endkey: [hash, {}, {}, {}, {}, {}, {}], group_level: 4}, function(err, body) {
+    var apps = {};
+    body.rows.map(function(row) {
+      var hash = row.key[0];
+      var url = row.key[1];
+      var year = row.key[2];
+      var month = row.key[3];
+      if (!(url in apps)) {
+        apps[url] = {
+          url: url,
+          count: 0
+        };
+        if (hash) {
+          apps[url].url_hash = hash;
+        }
+      }
+      if (validator.isURL(url, {protocols: ['http','https'], require_protocol: true})) {
+        apps[url].is_url = true;
+      }
+      if (!(year in apps[url])) {
+        apps[url][year] = {};
+      }
+      if (!(month in apps[url][year])) {
+        apps[url][year][month] = row.value;
+        apps[url].count += row.value;
+      }
+    });
+    appsSortedByCount = [];
+    for (var url in apps) {
+      appsSortedByCount.push(apps[url]);
+    }
+    appsSortedByCount.sort(function(a, b) {
+      if (a.count < b.count) {
+        return -1;
+      }
+      if (a.count > b.count) {
+        return 1;
+      }
+      return 0;
+    }).reverse();
+    res.render('repo', {apps: appsSortedByCount});
+  });
+});
+
+app.post('/', urlEncodedParser, track);
+
+app.post('/api/v1/track', jsonParser, track);
+
+function track(req, res) {
   var app = req.app;
   var deploymentTrackerDb = app.get('deployment-tracker-db');
   if (!deploymentTrackerDb) {
@@ -220,6 +261,7 @@ app.post('/api/v1/track', jsonParser, function(req, res) {
   }
   if (req.body.repository_url) {
     event.repository_url = req.body.repository_url;
+    event.repository_url_hash = crypto.createHash('md5').update(event.repository_url).digest('hex');
   }
   if (req.body.application_name) {
     event.application_name = req.body.application_name;
@@ -243,7 +285,7 @@ app.post('/api/v1/track', jsonParser, function(req, res) {
       ok: true
     });
   });
-});
+}
 
 app.get("/api/v1/whoami", authenticate(), function (request, response) {
     response.send(request.session.ibmid);
@@ -255,9 +297,12 @@ app.get('/error', function (request, response) {
 
 function authenticate() {
     return function(request, response, next) {
+        if (appEnv.isLocal) {
+          return next();
+        }
         if (!request.isAuthenticated() || request.session.ibmid === undefined) {
             response.redirect('/auth/ibmid');
-            return;
+            return next();
         }
 
         console.log(request.session.ibmid);
@@ -268,19 +313,19 @@ function authenticate() {
             "Please goto <a href='https://idaas.ng.bluemix.net/idaas/protected/manageprofile.jsp'>https://idaas.ng.bluemix.net/idaas/protected/manageprofile.jsp</a>" +
             "  Then goto <a href=" + appEnv.url + "/auth/ibmid>" + appEnv.url + "/auth/ibmid</a>" +
             " to login again to pick up you verified email"});
-          return;
+          return next();
         }
         else {
             var ibmer = false;
             _.each(verifiedEmail, function (email) {
-                if (email.toLowerCase().indexOf('ibm.com', email.length - 'ibm.com'.length) !== -1) {
+                if (email.toLowerCase().endsWith("ibm.com")) {
                     ibmer = true;
                 }
             });
             if (ibmer === false) {
               response.render('error', {message: "You must be an IBM'er to use this app"});
             }
-            return;
+            return next();
         }
     };
 }
