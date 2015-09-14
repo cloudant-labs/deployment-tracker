@@ -46,8 +46,7 @@ app.use(passport.session());
 var appUrl;
 
 if (!appEnv.isLocal) {
-  //fixing this in a future commit
-  //app.use(require('express-force-ssl'));
+  app.use(require('express-force-ssl'));
   appUrl = process.env.URL;
 }
 else {
