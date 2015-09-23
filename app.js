@@ -318,6 +318,10 @@ app.get("/stats/:hash/badge.svg", authenticate(), function(req, res) {
     svgData.totalWidth = svgData.leftWidth + svgData.rightWidth;
     svgData.leftX = svgData.leftWidth / 2 + 1;
     svgData.rightX = svgData.leftWidth + svgData.rightWidth / 2 - 1;
+    svgData.leftWidth = svgData.leftWidth + 23;
+    svgData.totalWidth = svgData.totalWidth + 23;
+    svgData.leftX = svgData.leftX + 23;
+    svgData.rightX = svgData.rightX + 23;
     res.set("Content-Type", "image/svg+xml");
     res.render("badge.xml", svgData);
   });
