@@ -3,6 +3,9 @@ declared-services:
   deployment-tracker-db:
     label: cloudantNoSQLDB
     plan: Shared
+  SSOSAMLIBM:
+    label: SingleSignOn
+    plan: standard
 applications:
 - name: deployment-tracker
   memory: 256M
@@ -10,3 +13,4 @@ applications:
   random-route: true
   services:
   - deployment-tracker-db
+  - SSOSAMLIBM

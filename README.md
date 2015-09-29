@@ -47,6 +47,12 @@ Create a Cloudant service within Bluemix if one has not already been created:
 
     $ cf create-service cloudantNoSQLDB Shared deployment-tracker-db
 
+Create a Single Sign On service within Bluemix if one has not already been created:
+
+    $ cf create-service SingleSignOn standard SSOSAMLIBM
+
+Once the Single Sign On service has been created, you must [configure the Single Sign On Service](https://www.ng.bluemix.net/docs/#services/SingleSignOn/index.html#sso_gettingstarted) before deploying the Deployment Tracker application to Bluemix.
+
 ## Deploying
 
 To deploy to Bluemix, simply:
