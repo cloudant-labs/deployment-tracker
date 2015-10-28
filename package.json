@@ -53,7 +53,7 @@
   },
   "devDependencies": {
     "grunt": "*",
-    "grunt-cli": "*",
+    "grunt-cli": "0.1.13",
     "grunt-contrib-jshint": "*",
     "jshint": "*",
     "grunt-jscs": "*"
