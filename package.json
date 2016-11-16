@@ -51,7 +51,7 @@
     "passport-idaas-openidconnect": "1.0.0",
     "restler": "3.4.0",
     "underscore": "1.8.3",
-    "validator": "5.1.0"
+    "validator": "5.4.0"
   },
   "devDependencies": {
     "grunt": "1.0.1",
