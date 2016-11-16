@@ -48,7 +48,7 @@
     "http-post": "0.1.1",
     "node-uuid": "1.4.7",
     "passport": "0.3.2",
-    "passport-idaas-openidconnect": "1.0.0",
+    "passport-idaas-openidconnect": "1.1.1",
     "restler": "3.4.0",
     "underscore": "1.8.3",
     "validator": "5.1.0"
