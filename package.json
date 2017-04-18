@@ -38,7 +38,7 @@
     "cloudant": "1.4.1",
     "commander": "2.8.1",
     "connect-redis": "3.0.2",
-    "cookie-parser": "1.4.1",
+    "cookie-parser": "1.4.2",
     "dotenv": "2.0.0",
     "express": "4.13.4",
     "express-csv": "0.6.0",
