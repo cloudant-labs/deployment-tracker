@@ -1,6 +1,6 @@
 {
   "name": "deployment-tracker",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Tracks deployments of sample applications",
   "main": "app.js",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/IBM-Bluemix/cf-deployment-tracker-service.git"
+    "url": "https://github.com/IBM/metrics-collector-service.git"
   },
   "keywords": [
     "Cloudant",
@@ -22,14 +22,19 @@
     {
       "name": "Jeff Sloyer",
       "email": "jbsloyer@us.ibm.com"
+    },
+    {
+      "name": "Tommy Li",
+      "email": "tommy.chaoping.li@ibm.com"
     }
   ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/IBM-Bluemix/cf-deployment-tracker-service/issues"
+    "url": "https://github.com/IBM/metrics-collector-service/issues"
   },
-  "homepage": "https://github.com/IBM-Bluemix/cf-deployment-tracker-service",
+  "homepage": "https://github.com/IBM/metrics-collector-service",
   "dependencies": {
+    "analytics-node": "^3.0.0",
     "async": "^1.5.2",
     "body-parser": "1.15.0",
     "bower": "1.7.7",

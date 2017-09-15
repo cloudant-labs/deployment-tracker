@@ -20,7 +20,8 @@ var express = require("express"),
   hbs = require("hbs"),
   restler = require("restler"),
   forceSSL = require("express-force-ssl"),
-  async = require("async");
+  async = require("async"),
+  metric = require('./metric');
 
 
 dotenv.load();
@@ -223,7 +224,7 @@ app.get("/", forceSslIfNotLocal, function(req, res) {
 });
 
 // Get metrics overview
-app.get("/stats", [forceSslIfNotLocal, authenticate()], function(req, res) {
+app.get("/stats", forceSslIfNotLocal, function(req, res) {
   var app = req.app;
   var deploymentTrackerDb = app.get("deployment-tracker-db");
   if (!deploymentTrackerDb) {
@@ -338,7 +339,7 @@ app.get("/repos", [forceSslIfNotLocal, checkAPIKey()], function(req, res) {
 });
 
 // Get metrics for a specific repo
-app.get("/stats/:hash", [forceSslIfNotLocal, authenticate()], function(req, res) {
+app.get("/stats/:hash", forceSslIfNotLocal, function(req, res) {
   var app = req.app;
   var deploymentTrackerDb = app.get("deployment-tracker-db");
   var appsSortedByCount = [];
@@ -528,7 +529,7 @@ function track(req, res) {
     //       missing: ["missing_property_name"]
     //      }
     var missing = _.filter(["application_id", "application_name", 
-                            "repository_url", "runtime", "space_id"],
+                            "repository_url", "runtime", "space_id","config"],
                            function(property) {
                             return (! (req.body[property]));
                           });
@@ -539,6 +540,7 @@ function track(req, res) {
       return res.status(200).json({ok: true});
     }    
   }
+
 
   var event = {
     date_received: new Date().toJSON()
@@ -587,6 +589,11 @@ function track(req, res) {
   else {
     event.bound_vcap_services = {};
   }
+
+  var provider = '';
+  if(req.body.provider) provider = req.body.provider;
+  //Sent data to Segment
+  metric.sentAnalytic(event,req.body.config, provider);
 
   var eventsDb = deploymentTrackerDb.use("events");
   eventsDb.insert(event, function (err) {
