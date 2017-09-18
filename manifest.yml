@@ -8,6 +8,7 @@ declared-services:
     plan: 30mb
 applications:
 - name: deployment-tracker
+  host: trackermetric
   memory: 256M
   instances: 3
   random-route: true

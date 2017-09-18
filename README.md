@@ -1,21 +1,19 @@
-# Deployment Tracker
+# Metrics Collector Service
 
-The Deployment Tracker tracks deployments of sample applications to [IBM Bluemix](https://www.bluemix.net/).
+Metrics Collector Service tracks deployments of sample workloads to IBM Cloud and Watson runtimes based on Cloud Foundry, Kubernetes, OpenWhisk, Data Science Experience and others.
 
-> To enable tracking for your sample applications, follow [these instructions](https://github.com/IBM-Bluemix/cf-deployment-tracker-service/wiki/Registering-a-new-sample-application-for-deployment-tracking)
+![Flow](images/metrics-service.png)
 
-[**_View a summary of deployments tracked._**](https://deployment-tracker.mybluemix.net/)
+> To enable tracking for your sample applications, follow [these instructions]()
 
-## Build Status
-
-[![Build Status](https://travis-ci.org/IBM-Bluemix/cf-deployment-tracker-service.svg?branch=master)](https://travis-ci.org/IBM-Bluemix/cf-deployment-tracker-service) [![Dependencies](https://david-dm.org/IBM-Bluemix/cf-deployment-tracker-service.svg)](https://david-dm.org/IBM-Bluemix/cf-deployment-tracker-service)
+[**_View a summary of deployments tracked._**](https://trackermetric.mybluemix.net/)
 
 ## Cloning
 
 Get the project and change into the project directory:
 
-    $ git clone https://github.com/IBM-Bluemix/cf-deployment-tracker-service.git
-    $ cd cf-deployment-tracker-service
+    $ git clone https://github.com/IBM/metrics-collector-service.git
+    $ cd metrics-collector-service
 
 ## Configuring Local Development
 
@@ -65,12 +63,11 @@ To deploy to Bluemix, simply:
 
 There are a number of language-specific clients for the deployment tracker, including:
 
-- [Node.js](https://github.com/IBM-Bluemix/cf-deployment-tracker-client-node)
-- [Python](https://github.com/IBM-Bluemix/cf-deployment-tracker-client-python)
-- [Java](https://github.com/IBM-Bluemix/cf-deployment-tracker-client-java)
-- [Go](https://github.com/IBM-Bluemix/cf_deployment_tracker_client_go)
-- [Swift](https://github.com/IBM-Bluemix/cf-deployment-tracker-client-swift)
-- [Electron](https://www.npmjs.com/package/cf-deployment-tracker-client-electron)
+- [Node.js](https://github.com/IBM/metrics-collector-client-node)
+- [Python](https://github.com/IBM/metrics-collector-client-python)
+- [Java](https://github.com/IBM/metrics-collector-client-java)
+- [Go](https://github.com/IBM/metrics-collector_client_go)
+- [Swift](https://github.com/metrics-collector-client-swift)
 
 ### Client testing
 Clients can request payload validation by including `"test": true` in the payload. 
@@ -93,7 +90,7 @@ Failure response (HTTP code 400):
 
 ## Privacy Notice
 
-This web application includes code to track deployments to [IBM Bluemix](https://www.bluemix.net/) and other Cloud Foundry platforms. The following information is sent to a [Deployment Tracker](https://github.com/cloudant-labs/deployment-tracker) service on each deployment:
+This web application includes code to track deployments to [IBM Bluemix](https://www.bluemix.net/) and other Cloud Foundry platforms. The following information is sent to a [Deployment Tracker](https://github.com/IBM/metrics-collector-service) service on each deployment:
 
 * Application Name (`application_name`)
 * Application GUID (`application_id`)
