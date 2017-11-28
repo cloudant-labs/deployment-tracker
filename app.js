@@ -227,7 +227,7 @@ app.get("/stats", [forceSslIfNotLocal, authenticate()], function(req, res) {
   var app = req.app;
   var deploymentTrackerDb = app.get("deployment-tracker-db");
   if (!deploymentTrackerDb) {
-    return res.status(500);
+    return res.status(500).end();
   }
   var eventsDb = deploymentTrackerDb.use("events");
   eventsDb.view("deployments", "by_repo", {group_level: 3}, function(err, body) {
@@ -284,7 +284,7 @@ app.get("/stats", [forceSslIfNotLocal, authenticate()], function(req, res) {
         }
         return 0;
       }).reverse();
-      res.render("stats", {apps: appsSortedByCount});
+      res.status(410).render("stats", {apps: appsSortedByCount});
     });
   });
 });
@@ -294,7 +294,7 @@ app.get("/stats.csv", [forceSslIfNotLocal, authenticate()], function(req, res) {
   var app = req.app;
   var deploymentTrackerDb = app.get("deployment-tracker-db");
   if (!deploymentTrackerDb) {
-    return res.status(500);
+    return res.status(500).end();
   }
   var eventsDb = deploymentTrackerDb.use("events");
   eventsDb.view("deployments", "by_repo", {group_level: 3}, function(err, body) {
@@ -308,7 +308,7 @@ app.get("/stats.csv", [forceSslIfNotLocal, authenticate()], function(req, res) {
       var count = row.value;
       apps.push([url, year, month, count]);
     });
-    res.csv(apps);
+    res.status(200).csv(apps);
   });
 });
 
@@ -318,7 +318,7 @@ app.get("/repos", [forceSslIfNotLocal, checkAPIKey()], function(req, res) {
   var deploymentTrackerDb = app.get("deployment-tracker-db");
 
   if (!deploymentTrackerDb) {
-    return res.status(500);
+    return res.status(500).end();
   }
 
   var eventsDb = deploymentTrackerDb.use("events");
@@ -333,7 +333,7 @@ app.get("/repos", [forceSslIfNotLocal, checkAPIKey()], function(req, res) {
       }
     });
 
-    res.json(apps);
+    res.status(410).json(apps);
   });
 });
 
@@ -344,7 +344,7 @@ app.get("/stats/:hash", [forceSslIfNotLocal, authenticate()], function(req, res)
   var appsSortedByCount = [];
 
   if (!deploymentTrackerDb) {
-    return res.status(500);
+    return res.status(500).end();
   }
   var eventsDb = deploymentTrackerDb.use("events");
   var hash = req.params.hash;
@@ -413,7 +413,7 @@ app.get("/stats/:hash", [forceSslIfNotLocal, authenticate()], function(req, res)
       if (!error) {
         appsSortedByCount[0].githubStats = result;
       }
-      res.render("repo", {protocolAndHost: protocolAndHost, apps: appsSortedByCount});
+      res.status(410).render("repo", {protocolAndHost: protocolAndHost, apps: appsSortedByCount});
     });
   });
 });
@@ -424,7 +424,7 @@ app.get("/stats/:hash/metrics.json", forceSslIfNotLocal, function(req, res) {
     deploymentTrackerDb = app.get("deployment-tracker-db");
 
   if (!deploymentTrackerDb) {
-    return res.status(500);
+    return res.status(500).end();
   }
   var eventsDb = deploymentTrackerDb.use("events"),
    hash = req.params.hash;
@@ -436,7 +436,7 @@ app.get("/stats/:hash/metrics.json", forceSslIfNotLocal, function(req, res) {
       url_hash: hash,
       count: body.rows[0].value
     };
-    res.json(appStats);
+    res.status(410).json(appStats);
   });
 });
 
@@ -446,7 +446,7 @@ app.get("/stats/:hash/badge.svg", forceSslIfNotLocal, function(req, res) {
     deploymentTrackerDb = app.get("deployment-tracker-db");
 
   if (!deploymentTrackerDb) {
-    return res.status(500);
+    return res.status(500).end();
   }
   var eventsDb = deploymentTrackerDb.use("events"),
    hash = req.params.hash;
@@ -457,7 +457,7 @@ app.get("/stats/:hash/badge.svg", forceSslIfNotLocal, function(req, res) {
     var count = body.rows[0].value;
     //TODO: Rename this variable
     var svgData = {
-      left: "Bluemix Deployments",
+      left: "IBM Cloud Deployments",
       right: count.toString(),
     };
     svgData.leftWidth = svgData.left.length * 6.5 + 10;
@@ -468,7 +468,7 @@ app.get("/stats/:hash/badge.svg", forceSslIfNotLocal, function(req, res) {
     res.set({"Content-Type": "image/svg+xml",
             "Cache-Control": "no-cache",
             "Expires": 0});
-    res.render("badge.xml", svgData);
+    res.status(410).render("badge.xml", svgData);
   });
 });
 
@@ -478,7 +478,7 @@ app.get("/stats/:hash/button.svg", forceSslIfNotLocal, function(req, res) {
     deploymentTrackerDb = app.get("deployment-tracker-db");
 
   if (!deploymentTrackerDb) {
-    return res.status(500);
+    return res.status(500).end();
   }
   var eventsDb = deploymentTrackerDb.use("events"),
    hash = req.params.hash;
@@ -489,7 +489,7 @@ app.get("/stats/:hash/button.svg", forceSslIfNotLocal, function(req, res) {
     var count = body.rows[0].value;
     //TODO: Rename this variable
     var svgData = {
-      left: "Deploy to Bluemix",
+      left: "Deploy to IBM Cloud",
       right: count.toString(),
     };
     svgData.leftWidth = svgData.left.length * 11 + 20;
@@ -504,7 +504,7 @@ app.get("/stats/:hash/button.svg", forceSslIfNotLocal, function(req, res) {
     res.set({"Content-Type": "image/svg+xml",
             "Cache-Control": "no-cache",
             "Expires": 0});
-    res.render("button.xml", svgData);
+    res.status(410).render("button.xml", svgData);
   });
 });
 
@@ -515,29 +515,7 @@ function track(req, res) {
     return res.status(500).json({ error: "No database server configured" });
   }
   if (!req.body) {
-    return res.sendStatus(400);
-  }
-
-  if((req.body.test)&&(req.body.test === true)) {
-    // This is a test request. 
-    // Verify the payload and return appropriate status:
-    //  200 {ok: true} if request meets the spec
-    //  400 if request doesn't include all required properties
-    //      {
-    //       ok: false,
-    //       missing: ["missing_property_name"]
-    //      }
-    var missing = _.filter(["application_id", "application_name", 
-                            "repository_url", "runtime", "space_id"],
-                           function(property) {
-                            return (! (req.body[property]));
-                          });
-    if(missing.length > 0) {
-      return res.status(400).json({ok: false, missing: missing});
-    }
-    else {
-      return res.status(200).json({ok: true});
-    }    
+    return res.sendStatus(400).end();
   }
 
   var event = {
@@ -594,8 +572,11 @@ function track(req, res) {
       console.error(err);
       return res.status(500).json({error: "Internal Server Error"});
     }
-    return res.status(201).json({
-      ok: true
+    return res.status(410).json({
+      ok: false,
+      error: "This service is discontinued. Refer to " +
+             "https://github.com/IBM-Bluemix/cf-deployment-tracker-service/wiki/Deployment-Tracker-Service-status" +
+             " for more information."
     });
   });
 }
@@ -621,7 +602,7 @@ app.get("/api/v1/stats", [forceSslIfNotLocal, authenticate()], function (request
       response.send(error);
     }
     else {
-      response.json(result);
+      response.status(410).json(result);
     }
   });
 });
